@@ -20,15 +20,7 @@
         .container { max-width:1280px; margin:0 auto; display:grid; grid-template-columns:1fr 440px; gap:25px; }
         @media (max-width:1024px) { .container { grid-template-columns:1fr; } }
         .board-container { background:var(--card); padding:25px; border-radius:24px; box-shadow:0 20px 40px rgba(0,0,0,0.5); border:1px solid #334155; }
-        #board { 
-            width:100% !important; 
-            max-width:520px; 
-            margin:0 auto; 
-            border-radius:16px; 
-            box-shadow:0 15px 35px rgba(16,185,129,0.3);
-            touch-action: none;           /* ← Impede scroll no telemóvel ao arrastar */
-            user-select: none;
-        }
+        #board { width:100% !important; max-width:520px; margin:0 auto; border-radius:16px; box-shadow:0 15px 35px rgba(16,185,129,0.3); touch-action:none; }
         .sidebar { background:var(--card); padding:28px; border-radius:24px; box-shadow:0 20px 40px rgba(0,0,0,0.5); border:1px solid #334155; display:flex; flex-direction:column; gap:24px; }
         .section-title { font-size:1.3rem; font-weight:600; color:#10b981; margin-bottom:12px; }
         textarea { width:100%; height:138px; background:#0f172a; color:#e2e8f0; border:2px solid #334155; border-radius:16px; padding:16px; font-family:monospace; font-size:15px; resize:none; }
@@ -44,7 +36,7 @@
         .status { font-size:1.35rem; padding:18px 24px; border-radius:16px; text-align:center; font-weight:700; box-shadow:0 4px 15px rgba(0,0,0,0.3); min-height:72px; }
         .current-var { background:linear-gradient(90deg,#052e16,#10b981); color:white; padding:16px 20px; border-radius:16px; font-weight:600; }
         
-        #sideModal, #successModal, #promotionModal, #confirmModal, #folderModal {
+        #loginModal, #sideModal, #successModal, #promotionModal, #confirmModal, #folderModal {
             display:none; position:fixed; top:0; left:0; width:100%; height:100%;
             background:rgba(15,23,42,0.96); align-items:center; justify-content:center; z-index:10000;
         }
@@ -52,14 +44,25 @@
     </style>
 </head>
 <body>
-    <!-- Header e resto do HTML igual ao anterior -->
+
+    <!-- MODAL DE LOGIN / CRIAR CONTA -->
+    <div id="loginModal" class="modal-content">
+        <h2 id="loginTitle">Entrar na tua conta</h2>
+        <input id="username" type="text" placeholder="Nome de utilizador" style="width:100%; padding:14px; margin:12px 0; border-radius:12px; background:#334155; color:white; border:none;">
+        <input id="password" type="password" placeholder="Password" style="width:100%; padding:14px; margin:12px 0; border-radius:12px; background:#334155; color:white; border:none;">
+        <div style="margin:25px 0 10px;">
+            <button onclick="loginUser()" style="width:48%; margin-right:4%;">Entrar</button>
+            <button onclick="createAccount()" style="width:48%; background:#64748b;">Criar Conta</button>
+        </div>
+        <small style="color:#94a3b8;">Os teus dados ficam guardados neste navegador.</small>
+    </div>
+
     <div class="header">
         <h1>♟️ Chess Variation Trainer</h1>
-        <p style="color:#a3e4c2; font-size:1.1rem;">Sistema de pastas + clique para mover</p>
-        <div class="nav-tabs">
-            <div class="tab active" onclick="setFilter('all')" id="tab-all">Todas</div>
-            <div class="tab" onclick="setFilter('white')" id="tab-white">Brancas</div>
-            <div class="tab" onclick="setFilter('black')" id="tab-black">Pretas</div>
+        <p style="color:#a3e4c2; font-size:1.1rem;">Pastas + sistema de erros</p>
+        <div style="margin-top:10px;">
+            <span id="currentUserDisplay" style="background:#334155; padding:6px 14px; border-radius:9999px; font-size:0.95rem;"></span>
+            <button onclick="logout()" style="margin-left:10px; background:#ef4444; font-size:0.9rem;">Sair</button>
         </div>
     </div>
 
@@ -101,7 +104,7 @@
         </div>
     </div>
 
-    <!-- Modais (mesmos da versão anterior) -->
+    <!-- Modais -->
     <div id="sideModal" class="modal-content">
         <h2>🎨 Jogar de que lado?</h2>
         <div style="display:flex; gap:20px; margin:25px 0;">
@@ -119,12 +122,42 @@
         <button onclick="cancelFolderChoice()" style="background:#334155; width:100%; margin-top:10px;">Cancelar</button>
     </div>
 
-    <!-- Outros modais (promotion, confirm, success) mantidos iguais -->
+    <!-- Outros modais -->
+    <div id="promotionModal" class="modal-content">
+        <h2>♟️ Promoção do Peão</h2>
+        <p style="margin-bottom:25px;">Escolhe a peça:</p>
+        <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:15px;">
+            <button onclick="promotePiece('q')" style="font-size:2.4rem; padding:22px; border-radius:16px; background:#334155;">👑</button>
+            <button onclick="promotePiece('r')" style="font-size:2.4rem; padding:22px; border-radius:16px; background:#334155;">♜</button>
+            <button onclick="promotePiece('b')" style="font-size:2.4rem; padding:22px; border-radius:16px; background:#334155;">♝</button>
+            <button onclick="promotePiece('n')" style="font-size:2.4rem; padding:22px; border-radius:16px; background:#334155;">♞</button>
+        </div>
+    </div>
+
+    <div id="confirmModal" class="modal-content">
+        <span style="font-size:4rem; display:block; margin-bottom:15px;">⚠️</span>
+        <h2 id="confirmTitle" style="color:#ef4444;">Tem certeza?</h2>
+        <p id="confirmText" style="margin:20px 0; font-size:1.15rem; line-height:1.5;"></p>
+        <div style="display:flex; gap:15px;">
+            <button onclick="confirmAction()" class="danger" style="flex:1;">Sim, eliminar</button>
+            <button onclick="cancelConfirm()" style="flex:1; background:#64748b;">Cancelar</button>
+        </div>
+    </div>
+
+    <div id="successModal" class="modal-content">
+        <h2>🎉 PARABÉNS!</h2>
+        <p id="successText" style="font-size:1.3rem; margin:20px 0;"></p>
+        <div style="display:flex; gap:18px; justify-content:center;">
+            <button onclick="nextAfterSuccess()" style="padding:18px 36px; font-size:1.2rem;">Próxima Variação</button>
+            <button onclick="backToMenu()" style="background:#64748b; padding:18px 36px; font-size:1.2rem;">Voltar ao Menu</button>
+        </div>
+    </div>
 
     <script>
         let board = null;
         let game = new Chess();
         let variations = [];
+        let currentUser = null;
         let currentVariationIndex = -1;
         let currentMoveIndex = 0;
         let errorCount = 0;
@@ -134,7 +167,6 @@
         let pendingPromotion = null;
         let currentFilter = 'all';
         let currentFolderFilter = null;
-        let selectedSquare = null;           // ← Novo: para clique-to-move
 
         const config = {
             draggable: true,
@@ -144,76 +176,268 @@
             orientation: 'black'
         };
 
-        function initBoard() {
-            board = Chessboard('board', config);
-            // Ativa clique nas casas para mover
-            $('#board').on('click', '.square-55d63', function() {
-                const square = $(this).attr('data-square');
-                handleSquareClick(square);
-            });
+        function initBoard() { board = Chessboard('board', config); }
+
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'flex';
         }
 
-        function handleSquareClick(square) {
-            if (!isTraining || currentVariationIndex === -1) return;
+        function loginUser() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            if (!username || !password) return alert("Preenche username e password!");
 
-            const v = variations[currentVariationIndex];
-            if (currentMoveIndex >= v.moves.length) return;
+            const key = "user_" + username;
+            const saved = localStorage.getItem(key);
+            if (!saved) return alert("Conta não existe. Cria uma nova conta.");
 
-            const isPlayerTurn = (game.turn() === (v.side === 'white' ? 'w' : 'b'));
-            if (!isPlayerTurn) return;
+            const data = JSON.parse(saved);
+            if (data.password !== password) return alert("Password incorreta!");
 
-            if (!selectedSquare) {
-                // Primeiro clique: seleciona peça
-                if (game.get(square) && game.get(square).color === game.turn()) {
-                    selectedSquare = square;
-                    board.selectSquare(square);   // highlight
-                }
-            } else {
-                // Segundo clique: tenta mover
-                const move = game.move({ from: selectedSquare, to: square, promotion: 'q' });
-                board.deselectSquare(selectedSquare);
-                selectedSquare = null;
+            currentUser = username;
+            variations = data.variations || [];
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('currentUserDisplay').innerHTML = `👤 ${username}`;
+            renderFolderList();
+            renderVariationList();
+            updateVarCount();
+        }
 
-                if (move) {
-                    board.position(game.fen());
-                    updateMoveHistory();
-                    // Verifica se foi o lance correto
-                    const expected = v.moves[currentMoveIndex];
-                    const correct = expected.from === move.from && expected.to === move.to;
-                    if (correct) {
-                        currentMoveIndex++;
-                        errorCount = 0;
-                        if (currentMoveIndex >= v.moves.length) {
-                            showSuccessModal();
-                            return;
-                        }
-                        setTimeout(playBotIfNeeded, 420);
-                    } else {
-                        updateStatus(`❌ Erro! Tente novamente (${errorCount + 1}/3)`);
-                        game.undo();
-                        board.position(game.fen());
-                        errorCount++;
-                        if (errorCount >= 3) {
-                            const auto = game.move({ from: expected.from, to: expected.to, promotion: expected.promotion || 'q' });
-                            if (auto) {
-                                board.position(game.fen());
-                                currentMoveIndex++;
-                                errorCount = 0;
-                                updateMoveHistory();
-                                if (currentMoveIndex >= v.moves.length) showSuccessModal();
-                                else setTimeout(playBotIfNeeded, 420);
-                            }
-                        }
-                    }
-                }
+        function createAccount() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            if (!username || !password) return alert("Preenche username e password!");
+
+            const key = "user_" + username;
+            if (localStorage.getItem(key)) return alert("Este nome de utilizador já existe!");
+
+            currentUser = username;
+            variations = [];
+            localStorage.setItem(key, JSON.stringify({ password: password, variations: variations }));
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('currentUserDisplay').innerHTML = `👤 ${username}`;
+            renderFolderList();
+            renderVariationList();
+            updateVarCount();
+        }
+
+        function logout() {
+            if (confirm("Queres sair da conta?")) {
+                currentUser = null;
+                variations = [];
+                currentVariationIndex = -1;
+                document.getElementById('currentUserDisplay').innerHTML = '';
+                showLoginModal();
             }
         }
 
-        // Restante do código mantido exatamente igual à versão anterior (pastas, 3 erros, bot, etc.)
-        // (O resto é idêntico ao ficheiro anterior que te enviei)
+        function saveCurrentUserData() {
+            if (!currentUser) return;
+            const key = "user_" + currentUser;
+            localStorage.setItem(key, JSON.stringify({ password: "******", variations: variations }));
+        }
+
+        function addVariation() {
+            const input = document.getElementById('pgnInput').value.trim();
+            if (!input) return alert("Insira uma variação!");
+            try {
+                const tempGame = new Chess();
+                let moves = [];
+                if (tempGame.load_pgn(input)) moves = tempGame.history({ verbose: true });
+                else {
+                    const moveList = input.split(/\s+/).filter(m => !/^\d+\.$/.test(m));
+                    for (let m of moveList) if (tempGame.move(m)) moves.push(tempGame.history({ verbose: true }).pop());
+                }
+                if (moves.length === 0) throw new Error();
+                if (moves.length > 60) moves = moves.slice(0, 60);
+                let name = moves.slice(0, 6).map(m => m.san).join(' ');
+                if (name.length > 38) name = name.substring(0, 35) + '...';
+                tempParsedVariation = { name, moves, pgn: input };
+                document.getElementById('sideModal').style.display = 'flex';
+            } catch (e) { alert("❌ Não consegui ler a variação."); }
+        }
+
+        function chooseSide(side) {
+            if (!tempParsedVariation) return;
+            tempParsedVariation.side = side;
+            document.getElementById('sideModal').style.display = 'none';
+            showFolderModal();
+        }
+
+        function cancelSideChoice() {
+            tempParsedVariation = null;
+            document.getElementById('sideModal').style.display = 'none';
+        }
+
+        function showFolderModal() {
+            const grid = document.getElementById('folderGrid');
+            grid.innerHTML = '';
+            const folders = [...new Set(variations.map(v => v.folder || "Geral"))];
+            folders.forEach(f => {
+                const btn = document.createElement('button');
+                btn.className = 'folder-btn';
+                btn.textContent = f;
+                btn.onclick = () => assignToFolder(f);
+                grid.appendChild(btn);
+            });
+            document.getElementById('folderModal').style.display = 'flex';
+        }
+
+        function assignToFolder(folderName) {
+            if (!tempParsedVariation) return;
+            variations.push({ ...tempParsedVariation, folder: folderName });
+            renderFolderList();
+            renderVariationList();
+            updateVarCount();
+            saveCurrentUserData();
+            tempParsedVariation = null;
+            document.getElementById('folderModal').style.display = 'none';
+            document.getElementById('pgnInput').value = '';
+        }
+
+        function cancelFolderChoice() {
+            tempParsedVariation = null;
+            document.getElementById('folderModal').style.display = 'none';
+        }
+
+        function createFolderFromModal() {
+            const name = prompt("Nome da nova pasta:");
+            if (!name) return;
+            assignToFolder(name);
+        }
+
+        function createNewFolder() {
+            const name = prompt("Nome da nova pasta:");
+            if (!name) return;
+            alert(`Pasta "${name}" criada!`);
+            renderFolderList();
+        }
+
+        function renderFolderList() {
+            const container = document.getElementById('folderList');
+            container.innerHTML = `<div onclick="setFolderFilter(null)" style="padding:8px 16px; background:${!currentFolderFilter ? '#10b981' : '#334155'}; color:${!currentFolderFilter ? '#0f172a' : '#fff'}; border-radius:12px; cursor:pointer; font-size:0.95rem;">Todas as Pastas</div>`;
+            const folders = [...new Set(variations.map(v => v.folder || "Geral"))];
+            folders.forEach(f => {
+                const el = document.createElement('div');
+                el.style = `padding:8px 16px; background:${currentFolderFilter === f ? '#10b981' : '#334155'}; color:${currentFolderFilter === f ? '#0f172a' : '#fff'}; border-radius:12px; cursor:pointer; font-size:0.95rem;`;
+                el.textContent = f;
+                el.onclick = () => setFolderFilter(f);
+                container.appendChild(el);
+            });
+        }
+
+        function setFolderFilter(folder) {
+            currentFolderFilter = folder;
+            renderFolderList();
+            renderVariationList();
+        }
+
+        function setFilter(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            if (filter === 'all') document.getElementById('tab-all').classList.add('active');
+            else if (filter === 'white') document.getElementById('tab-white').classList.add('active');
+            else document.getElementById('tab-black').classList.add('active');
+            renderVariationList();
+        }
+
+        function renderVariationList() {
+            const list = document.getElementById('variationList');
+            list.innerHTML = '';
+            let filtered = variations;
+            if (currentFilter === 'white') filtered = filtered.filter(v => v.side === 'white');
+            else if (currentFilter === 'black') filtered = filtered.filter(v => v.side === 'black');
+            if (currentFolderFilter) filtered = filtered.filter(v => (v.folder || "Geral") === currentFolderFilter);
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div style="padding:40px; text-align:center; color:#64748b;">Nenhuma variação nesta pasta...</div>';
+                return;
+            }
+            filtered.forEach((v) => {
+                const realIndex = variations.indexOf(v);
+                const sideText = v.side === 'white' ? '⚪ Brancas' : '⚫ Pretas';
+                const div = document.createElement('div');
+                div.className = `var-item ${realIndex === currentVariationIndex ? 'active' : ''}`;
+                div.innerHTML = `<span class="var-name">${v.name} <small style="opacity:0.7">(${sideText})</small></span><button class="delete-btn" title="Eliminar">🗑️</button>`;
+                div.addEventListener('click', e => { if (!e.target.classList.contains('delete-btn')) loadVariation(realIndex); });
+                div.querySelector('.delete-btn').addEventListener('click', e => { e.stopImmediatePropagation(); showDeleteConfirm(realIndex, v.name); });
+                list.appendChild(div);
+            });
+        }
+
+        function showDeleteConfirm(index, name) {
+            window.deleteIndex = index;
+            document.getElementById('confirmTitle').innerHTML = 'Eliminar variação?';
+            document.getElementById('confirmText').innerHTML = `Tem certeza que quer eliminar <strong>"${name}"</strong>?`;
+            document.getElementById('confirmModal').style.display = 'flex';
+        }
+
+        function confirmAction() {
+            if (window.deleteIndex !== undefined) {
+                deleteVariation(window.deleteIndex);
+                window.deleteIndex = undefined;
+            }
+            document.getElementById('confirmModal').style.display = 'none';
+        }
+
+        function cancelConfirm() {
+            window.deleteIndex = undefined;
+            document.getElementById('confirmModal').style.display = 'none';
+        }
+
+        function deleteVariation(i) {
+            if (i === currentVariationIndex) exitVariation();
+            variations.splice(i, 1);
+            if (currentVariationIndex > i) currentVariationIndex--;
+            if (currentVariationIndex >= variations.length) currentVariationIndex = -1;
+            renderFolderList();
+            renderVariationList();
+            updateVarCount();
+            saveCurrentUserData();
+        }
+
+        function updateVarCount() {
+            document.getElementById('varCount').textContent = variations.length;
+        }
+
+        function loadVariation(i) {
+            currentVariationIndex = i;
+            currentMoveIndex = 0;
+            errorCount = 0;
+            game.reset();
+            board.position('start');
+            isTraining = true;
+            const v = variations[i];
+            document.getElementById('currentVarDisplay').innerHTML = `📌 <strong>${v.name}</strong> <small>(${v.side === 'white' ? '⚪ Brancas' : '⚫ Pretas'})</small>`;
+            board.orientation(v.side);
+            renderVariationList();
+            updateMoveHistory();
+            updateStatus();
+            setTimeout(playBotIfNeeded, 380);
+        }
+
+        function playBotIfNeeded() {
+            if (currentVariationIndex === -1) return;
+            const v = variations[currentVariationIndex];
+            const isBotTurn = (game.turn() === (v.side === 'white' ? 'b' : 'w'));
+            if (isBotTurn && currentMoveIndex < v.moves.length) botMove();
+        }
+
+        function botMove() {
+            const v = variations[currentVariationIndex];
+            if (currentMoveIndex >= v.moves.length) return;
+            const moveData = v.moves[currentMoveIndex];
+            const result = game.move({ from: moveData.from, to: moveData.to, promotion: moveData.promotion || 'q' });
+            if (result) {
+                board.position(game.fen());
+                currentMoveIndex++;
+                updateMoveHistory();
+                updateStatus();
+                setTimeout(playBotIfNeeded, 280);
+            }
+        }
 
         function handleMove(source, target) {
-            // Mantém o drag funcional
             if (!isTraining || currentVariationIndex === -1) return 'snapback';
             const v = variations[currentVariationIndex];
             if (currentMoveIndex >= v.moves.length) return 'snapback';
@@ -240,10 +464,10 @@
                 setTimeout(playBotIfNeeded, 420);
                 return true;
             } else {
-                updateStatus(`❌ Erro! Tente novamente (${errorCount + 1}/3)`);
+                errorCount++;
+                updateStatus(`❌ Erro! Tente novamente (${errorCount}/3)`);
                 game.undo();
                 board.position(game.fen());
-                errorCount++;
                 if (errorCount >= 3) {
                     const auto = game.move({ from: expected.from, to: expected.to, promotion: expected.promotion || 'q' });
                     if (auto) {
@@ -259,17 +483,75 @@
             }
         }
 
-        // ... (todo o resto do código anterior continua igual)
+        function updateMoveHistory() {
+            const el = document.getElementById('moveHistory');
+            const history = game.history();
+            let html = '';
+            for (let i = 0; i < history.length; i += 2) {
+                html += `<strong>${Math.floor(i/2)+1}.</strong> ${history[i]} `;
+                if (history[i+1]) html += `${history[i+1]} `;
+            }
+            el.innerHTML = html || '<span style="color:#64748b;">Aguardando primeiro movimento...</span>';
+        }
+
+        function updateStatus(msg = '') {
+            const el = document.getElementById('status');
+            if (msg) { el.innerHTML = msg; return; }
+            if (currentVariationIndex === -1) { el.innerHTML = '👉 Escolhe ou adiciona uma variação'; return; }
+            const v = variations[currentVariationIndex];
+            const playerTurn = (game.turn() === (v.side === 'white' ? 'w' : 'b'));
+            el.innerHTML = playerTurn ? `✅ <strong>SUA VEZ</strong> (${v.side === 'white' ? 'Brancas' : 'Pretas'})` : `🤖 Bot a jogar...`;
+        }
+
+        function exitVariation() {
+            currentVariationIndex = -1;
+            currentMoveIndex = 0;
+            errorCount = 0;
+            isTraining = false;
+            game.reset();
+            board.position('start');
+            document.getElementById('currentVarDisplay').innerHTML = 'Nenhuma variação selecionada';
+            document.getElementById('moveHistory').innerHTML = '';
+            renderVariationList();
+            updateStatus('Escolhe ou adiciona uma variação para começar!');
+        }
+
+        function startTraining() {
+            if (variations.length === 0) return alert("Adiciona pelo menos uma variação!");
+            currentVariationIndex = Math.floor(Math.random() * variations.length);
+            loadVariation(currentVariationIndex);
+        }
+
+        function nextVariation() {
+            if (variations.length === 0) return;
+            currentVariationIndex = (currentVariationIndex + 1) % variations.length;
+            loadVariation(currentVariationIndex);
+        }
+
+        function resetCurrent() {
+            if (currentVariationIndex !== -1) loadVariation(currentVariationIndex);
+        }
+
+        function showSuccessModal() {
+            const text = document.getElementById('successText');
+            text.innerHTML = `Completaste a variação!`;
+            document.getElementById('successModal').style.display = 'flex';
+            isTraining = false;
+        }
+
+        function nextAfterSuccess() {
+            document.getElementById('successModal').style.display = 'none';
+            nextVariation();
+        }
+
+        function backToMenu() {
+            document.getElementById('successModal').style.display = 'none';
+            exitVariation();
+        }
 
         window.onload = () => {
             initBoard();
-            loadVariationsFromStorage();
-            if (variations.length === 0) {
-                setTimeout(() => {
-                    document.getElementById('pgnInput').value = `1. e4 c5 2. Nf3 d6 3. d4 cxd4 4. Nxd4 Nf6 5. Nc3 a6`;
-                    addVariation();
-                }, 600);
-            }
+            showLoginModal();   // Força o modal de login no início
         };
     </script>
 </body>
