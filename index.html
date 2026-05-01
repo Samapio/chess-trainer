@@ -36,7 +36,7 @@
         .status { font-size:1.35rem; padding:18px 24px; border-radius:16px; text-align:center; font-weight:700; box-shadow:0 4px 15px rgba(0,0,0,0.3); min-height:72px; }
         .current-var { background:linear-gradient(90deg,#052e16,#10b981); color:white; padding:16px 20px; border-radius:16px; font-weight:600; }
         
-        #loginModal, #sideModal, #successModal, #promotionModal, #confirmModal, #folderModal {
+        #loginModal, #sideModal, #folderModal, #promotionModal, #confirmModal, #successModal {
             display:none; position:fixed; top:0; left:0; width:100%; height:100%;
             background:rgba(15,23,42,0.96); align-items:center; justify-content:center; z-index:10000;
         }
@@ -45,12 +45,12 @@
 </head>
 <body>
 
-    <!-- MODAL DE LOGIN / CRIAR CONTA -->
+    <!-- Login Modal -->
     <div id="loginModal" class="modal-content">
         <h2 id="loginTitle">Entrar na tua conta</h2>
         <input id="username" type="text" placeholder="Nome de utilizador" style="width:100%; padding:14px; margin:12px 0; border-radius:12px; background:#334155; color:white; border:none;">
         <input id="password" type="password" placeholder="Password" style="width:100%; padding:14px; margin:12px 0; border-radius:12px; background:#334155; color:white; border:none;">
-        <div style="margin:25px 0 10px;">
+        <div style="margin:25px 0;">
             <button onclick="loginUser()" style="width:48%; margin-right:4%;">Entrar</button>
             <button onclick="createAccount()" style="width:48%; background:#64748b;">Criar Conta</button>
         </div>
@@ -122,7 +122,6 @@
         <button onclick="cancelFolderChoice()" style="background:#334155; width:100%; margin-top:10px;">Cancelar</button>
     </div>
 
-    <!-- Outros modais -->
     <div id="promotionModal" class="modal-content">
         <h2>♟️ Promoção do Peão</h2>
         <p style="margin-bottom:25px;">Escolhe a peça:</p>
@@ -162,7 +161,6 @@
         let currentMoveIndex = 0;
         let errorCount = 0;
         let isTraining = false;
-        let storageEnabled = true;
         let tempParsedVariation = null;
         let pendingPromotion = null;
         let currentFilter = 'all';
@@ -176,7 +174,9 @@
             orientation: 'black'
         };
 
-        function initBoard() { board = Chessboard('board', config); }
+        function initBoard() {
+            board = Chessboard('board', config);
+        }
 
         function showLoginModal() {
             document.getElementById('loginModal').style.display = 'flex';
@@ -551,7 +551,7 @@
 
         window.onload = () => {
             initBoard();
-            showLoginModal();   // Força o modal de login no início
+            showLoginModal();
         };
     </script>
 </body>
